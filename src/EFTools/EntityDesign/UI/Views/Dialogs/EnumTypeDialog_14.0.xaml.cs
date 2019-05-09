@@ -3,7 +3,9 @@
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Linq;
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Input;
 using System.Windows.Controls;
 using Microsoft.Data.Entity.Design.UI.ViewModels;
@@ -34,7 +36,6 @@ namespace Microsoft.Data.Entity.Design.UI.Views.Dialogs
             {
                 this.Title = EntityDesignerResources.EnumDialog_EditEnumWindowTitle;
             }
-            this.dgEnumTypeMembers.CellEditEnding += dgEnumTypeMembers_CellEditEnding;
             this.HasHelpButton = false;
         }
 
@@ -134,6 +135,39 @@ namespace Microsoft.Data.Entity.Design.UI.Views.Dialogs
                 finally
                 {
                     _isManualEditCommit = false;
+                }
+            }
+        }
+
+        private void dgEnumTypeMembers_OnLoaded(object sender, RoutedEventArgs e)
+        {
+            EnsureAccessibilityValues();
+        }
+
+        private void dgEnumTypeMembers_CurrentCellChanged(object sender, EventArgs e)
+        {
+            EnsureAccessibilityValues();
+        }
+
+        private void EnsureAccessibilityValues()
+        {
+            foreach (var row in dgEnumTypeMembers.FindDescendants<DataGridRow>().ToList())
+            {
+                foreach (var cell in row.FindDescendants<DataGridCell>().ToList())
+                {
+                    if (cell.Column != null)
+                    {
+                        if (cell.Column.DisplayIndex == 0)
+                        {
+                            cell.SetValue(AutomationProperties.NameProperty, EntityDesignerResources.EnumDialog_EnumTypeMemberNameLabel);
+                            cell.SetValue(AutomationProperties.HelpTextProperty, EntityDesignerResources.EnumDialog_EnumTypeMemberHelpText);
+                        }
+                        else if (cell.Column.DisplayIndex == 1)
+                        {
+                            cell.SetValue(AutomationProperties.NameProperty, EntityDesignerResources.EnumDialog_EnumTypeMemberValueLabel);
+                            cell.SetValue(AutomationProperties.HelpTextProperty, EntityDesignerResources.EnumDialog_EnumTypeMemberHelpText);
+                        }
+                    }
                 }
             }
         }

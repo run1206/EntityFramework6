@@ -12399,12 +12399,11 @@ namespace ProductivityApiTests
         #if !NET40
 
         [Fact] // Github 20
-        public void Context_gets_properly_retrieved_from_expression_in_VS2015()
+        public async Task Context_gets_properly_retrieved_from_expression_in_VS2015()
         {
-            var task = Context_gets_properly_retrieved_from_expression_in_VS2015_task();
-            task.Wait();
+            var result = await Context_gets_properly_retrieved_from_expression_in_VS2015_task();
 
-            Assert.Equal(16, task.Result.Count);
+            Assert.Equal(16, result.Count);
         }
 
         private async Task<List<Category>> Context_gets_properly_retrieved_from_expression_in_VS2015_task()
@@ -12419,6 +12418,45 @@ namespace ProductivityApiTests
                                  && queryOption == SampleEnumGitHub20.Value1
                               from category in context.Set<Category>()
                               select category).ToListAsync();
+            }
+        }
+
+        [Fact]
+        public async Task Context_gets_properly_retrieved_from_expression_WhenUsingDerivedDbContext()
+        {
+            using (var context = new DerivedDbContextUsage())
+            {
+                var result = await context.ExecuteProductsQuery();
+                Assert.Equal(2, result.Count);
+            }
+        }
+
+        private class DerivedDbContextUsage : SimpleModelContext
+        {
+            public DerivedDbContextUsage()
+            {
+                Database.SetInitializer(new DerivedDbContextUsageInitializer());
+            }
+
+            public async Task<List<Category>> ExecuteProductsQuery()
+            {
+                var queryOption = SampleEnumGitHub20.Value1;
+                int[] ids = { 1, 2, 3, 4 };
+                return await (from product in Set<Product>()
+                              where ids.Contains(product.Id)
+                                 && queryOption == SampleEnumGitHub20.Value1
+                              from category in Set<Category>()
+                              select category).ToListAsync();
+            }
+        }
+
+        private class DerivedDbContextUsageInitializer : DropCreateDatabaseAlways<DerivedDbContextUsage>
+        {
+            protected override void Seed(DerivedDbContextUsage context)
+            {
+                var category = context.Categories.Add(new Category { Id = "Cheese" });
+                context.Products.Add(new Product { Category = category });
+                context.Products.Add(new Product { Category = category });
             }
         }
 
@@ -12557,7 +12595,7 @@ namespace ProductivityApiTests
                      select n.Value).Skip(1).First());
                 Assert.True(false);
             }
-            catch (AssertException ex)
+            catch (XunitException ex)
             {
                 Assert.Equal("Assert.Equal() Failure\r\nExpected: 5\r\nActual:   4", ex.Message);
             }
@@ -12592,9 +12630,9 @@ namespace ProductivityApiTests
                      select n).ToList());
                 Assert.True(false);
             }
-            catch (AssertException ex)
+            catch (XunitException ex)
             {
-                Assert.Equal(
+                Assert.StartsWith(
                     "Left 'ID: 7, Value: 6, Name: Six' different from right 'ID: 8, Value: 7, Name: Seven'",
                     ex.Message);
             }
@@ -12628,9 +12666,9 @@ namespace ProductivityApiTests
                         ToList());
                 Assert.True(false);
             }
-            catch (AssertException ex)
+            catch (XunitException ex)
             {
-                Assert.Equal(
+                Assert.StartsWith(
                     "Left 'ID: 1, Region: WA, CompanyName: Microsoft\r\n' different from right 'ID: 1, Region: WA, CompanyName: Microsoft\r\n  ID: 1, Total: 111.00, OrderDate: 09/03/1997 00:00:00\r\n  ID: 3, Total: 333.00, OrderDate: 09/03/1999 00:00:00\r\n'",
                     ex.Message);
             }
@@ -12671,9 +12709,9 @@ namespace ProductivityApiTests
                                 }).ToList());
                 Assert.True(false);
             }
-            catch (AssertException ex)
+            catch (XunitException ex)
             {
-                Assert.Equal("Left list had fewer elements than right list.", ex.Message);
+                Assert.StartsWith("Left list had fewer elements than right list.", ex.Message);
             }
         }
 

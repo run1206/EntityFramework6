@@ -73,7 +73,7 @@ namespace System.Data.Entity.Migrations
         {
             if (string.IsNullOrWhiteSpace(name))
             {
-                throw new ArgumentException("'" + name + "' can not be null or empty.");
+                throw new ArgumentException("'" + nameof(name) + "' can not be null or empty.");
             }
 
             _name = name;
@@ -96,6 +96,9 @@ namespace System.Data.Entity.Migrations
                     {
                         var createDatabaseSql = "CREATE DATABASE [" + _name + "]";
                         ExecuteNonQuery(createDatabaseSql, ModelHelpers.SimpleConnectionString("master"));
+
+                        // Previously invalid connections may now be valid
+                        SqlConnection.ClearPool(new SqlConnection(ConnectionString));
                     }
 
                     ResetDatabase();

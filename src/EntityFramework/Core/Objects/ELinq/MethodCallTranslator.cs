@@ -221,6 +221,7 @@ namespace System.Data.Entity.Core.Objects.ELinq
                         new TrimStartTranslator(),
                         new TrimEndTranslator(),
                         new SpatialMethodCallTranslator(),
+                        new HierarchyIdMethodCallTranslator(),
                         new HasFlagTranslator(),
                         new ToStringTranslator(),
                     };
@@ -1488,8 +1489,10 @@ namespace System.Data.Entity.Core.Objects.ELinq
                         typeof(String).GetDeclaredMethod("Concat", typeof(object), typeof(object));
                     yield return
                         typeof(String).GetDeclaredMethod("Concat", typeof(object), typeof(object), typeof(object));
+#if !NETSTANDARD2_1
                     yield return
                         typeof(String).GetDeclaredMethod("Concat", typeof(object), typeof(object), typeof(object), typeof(object));
+#endif
                     yield return
                         typeof(String).GetDeclaredMethod("Concat", typeof(object[]));
                     yield return
